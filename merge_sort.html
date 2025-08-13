@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Merge Sort Visualizer</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    canvas {
+      background-color: #222;
+      display: block;
+      margin: 20px auto;
+    }
+    .controls {
+      margin-top: 10px;
+    }
+    button, input[type=range] {
+      padding: 8px 12px;
+      margin: 5px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    label {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Merge Sort Visualizer</h1>
+<canvas id="canvas" width="800" height="400"></canvas>
+
+<div class="controls">
+  <button onclick="generateArray()">Restart</button>
+  <button onclick="startSort()">Sort</button>
+  <label>Speed:</label>
+  <input type="range" min="10" max="500" value="50" id="speedSlider">
+</div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+let array = [];
+const SIZE = 50;
+let delay = 50;
+let sorting = false;
+
+document.getElementById("speedSlider").addEventListener("input", (e) => {
+  delay = parseInt(e.target.value);
+});
+
+function generateArray() {
+  array = [];
+  for (let i = 0; i < SIZE; i++) {
+    array.push(Math.floor(Math.random() * canvas.height));
+  }
+  drawArray();
+}
+
+function drawArray(highlight = []) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  let barWidth = canvas.width / SIZE;
+  array.forEach((val, idx) => {
+    ctx.fillStyle = highlight.includes(idx) ? "red" : "white";
+    ctx.fillRect(idx * barWidth, canvas.height - val, barWidth - 2, val);
+  });
+}
+
+async function mergeSort(start, end) {
+  if (end - start <= 1 || !sorting) return;
+
+  const mid = Math.floor((start + end) / 2);
+  await mergeSort(start, mid);
+  await mergeSort(mid, end);
+
+  let merged = [];
+  let i = start, j = mid;
+  while (i < mid && j < end) {
+    drawArray([i, j]);
+    await sleep(delay);
+    if (array[i] < array[j]) {
+      merged.push(array[i++]);
+    } else {
+      merged.push(array[j++]);
+    }
+  }
+  while (i < mid) merged.push(array[i++]);
+  while (j < end) merged.push(array[j++]);
+
+  for (let k = start; k < end; k++) {
+    array[k] = merged[k - start];
+    drawArray([k]);
+    await sleep(delay);
+  }
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function startSort() {
+  if (sorting) return;
+  sorting = true;
+  await mergeSort(0, array.length);
+  sorting = false;
+}
+
+generateArray();
+</script>
+
+</body>
+</html>
